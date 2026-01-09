@@ -10,7 +10,6 @@ class BackwardDeduction():
     def knowleadge_prove(self, goal: Atom) -> bool:
         facts = self.knowleadge.data
         open_rules = self.knowleadge.open_rules
-        close_rules = self.knowleadge.close_rules
 
         print(f"\n{'=' * 64}")
         print("НАЧАЛО ОБРАТНОЙ ДЕДУКЦИИ")
@@ -26,7 +25,7 @@ class BackwardDeduction():
         global_subs = {}
 
         print(f"\n{'=' * 64}")
-        print("ШАГ 1: Пытаемся правило для цели C(W)")
+        print("ШАГ 1: Пытаемся доказать цель C(W)")
         print(f"{'=' * 64}")
 
         for rule in open_rules:
@@ -74,7 +73,6 @@ class BackwardDeduction():
         rule_result = rule.right.copy()
         rule_input_atoms = rule.left.copy()
 
-        # унифицируем правую часть правила с целью
         print(f"  Унифицируем вывод правила с целью...")
         for right_atom in rule_result.args:
             subs = unificate_atoms(right_atom, goal)
@@ -111,13 +109,11 @@ class BackwardDeduction():
         print(f"    Итоговый вывод: {rule_result}")
         print(f"    Итоговые подстановки: {global_substitutions}")
 
-        # Добавляем доказанный факт в базу знаний
         for atom in rule_result.args:
             if not any(self.__atoms_equal(atom, existing) for existing in facts.args):
                 facts.args.append(atom)
                 print(f"    Добавлен новый факт: {atom}")
 
-        # Переносим правило в доказанные (с подстановками)
         proved_rule = rule.copy()
         apply_substitution(proved_rule.left.args + proved_rule.right.args, global_substitutions)
         self.knowleadge.close_rules.append(proved_rule)
@@ -136,7 +132,6 @@ class BackwardDeduction():
 
         print(f"    Начинаем DFS для условий: {left.args}")
 
-        # стек состояний: (оставшиеся подцели, подстановки)
         stack = [
             (left.args.copy(), global_substitutions.copy())
         ]
@@ -147,21 +142,18 @@ class BackwardDeduction():
             subgoals, subs = stack.pop()
             depth += 1
 
-            print(f"\n    Глубина {depth}:")
+            print(f"\n    Итерация {depth}:")
             print(f"      Оставшиеся подцели: {subgoals}")
             print(f"      Текущие подстановки: {subs}")
 
-            # если подцелей не осталось — успех
             if not subgoals:
                 print(f"      ✓ Все подцели доказаны!")
                 global_substitutions.update(subs)
                 return True
 
-            # берём одну подцель
             current = subgoals.pop(0)
             print(f"      Проверяем подцель: {current}")
 
-            # 1. Пытаемся доказать фактом
             proved = False
             print(f"      Ищем среди фактов...")
             for fact in facts.args:
@@ -183,7 +175,6 @@ class BackwardDeduction():
             if proved:
                 continue
 
-            # 2. Пытаемся доказать правилом
             print(f"      Не найдено среди фактов, ищем подходящее правило...")
             for rule in self.knowleadge.open_rules:
                 rule_copy = rule.copy()
@@ -233,7 +224,6 @@ class BackwardDeduction():
         return False
 
     def __atoms_equal(self, a1: Atom, a2: Atom) -> bool:
-        """Сравнивает два атома"""
         if a1.isPositive != a2.isPositive or a1.name != a2.name:
             return False
         if len(a1.args) != len(a2.args):

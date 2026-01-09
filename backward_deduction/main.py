@@ -19,9 +19,6 @@ def get_knowleadge():
 
 
 def main() -> None:
-    """
-    Прямая дедукция для определенных выражений методом поиска в ширину
-    """
     deduction = BackwardDeduction(
         knowleadge=get_knowleadge(),
     )
